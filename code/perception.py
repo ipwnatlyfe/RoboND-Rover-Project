@@ -4,7 +4,7 @@ import cv2
 
 # Identify pixels above the threshold
 # Threshold of RGB > 160 does a nice job of identifying ground pixels only
-def color_thresh(img, rgb_thresh=(160, 160, 160)):
+def color_thresh(img, rgb_thresh=(150, 150, 150)):
     # Create an array of zeros same xy size as img, but single channel
     color_select = np.zeros_like(img[:,:,0])
     # Require that each pixel be above all three threshold values in RGB
@@ -18,7 +18,7 @@ def color_thresh(img, rgb_thresh=(160, 160, 160)):
     # Return the binary image
     return color_select
     
-def below_color_thresh(img, rgb_thresh=(161, 161, 161)):
+def below_color_thresh(img, rgb_thresh=(140, 140, 140)):
     # Create an array of zeros same xy size as img, but single channel
     color_select = np.zeros_like(img[:,:,0])
     # Require that each pixel be above all three threshold values in RGB
@@ -157,8 +157,9 @@ def perception_step(Rover):
         # Example: Rover.worldmap[obstacle_y_world, obstacle_x_world, 0] += 1
         #          Rover.worldmap[rock_y_world, rock_x_world, 1] += 1
         #          Rover.worldmap[navigable_y_world, navigable_x_world, 2] += 1
-    Rover.worldmap[y_world_obs, x_world_obs, 0] += 1
-    Rover.worldmap[y_world, x_world, 2] += 10
+    if((Rover.pitch > 359.5 or Rover.pitch < .5) and (Rover.roll > 359.5 or Rover.roll < .5)):
+        Rover.worldmap[y_world_obs, x_world_obs, 0] += 1
+        Rover.worldmap[y_world, x_world, 2] += 10
     
     # 8) Convert rover-centric pixel positions to polar coordinates
     # Update Rover pixel distances and angles
@@ -170,8 +171,7 @@ def perception_step(Rover):
     
     rock_map = sample_thresh(warped)
     if rock_map.any():
-        print ("HELLO!")
-        print (rock_map)
+        #print (rock_map)
         rock_x, rock_y = rover_coords(rock_map)
         x_world_rock, y_world_rock = pix_to_world(rock_x, rock_y, Rover.pos[0], Rover.pos[1], Rover.yaw, 200, 10)
         

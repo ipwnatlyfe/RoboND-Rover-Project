@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 
 # This is where you can build a decision tree for determining throttle, brake and steer 
@@ -8,12 +9,13 @@ def decision_step(Rover):
     # Implement conditionals to decide what to do given perception data
     # Here you're all set up with some basic functionality but you'll need to
     # improve on this decision tree to do a good job of navigating autonomously!
-
+    
     # Example:
     # Check if we have vision data to make decisions with
     if Rover.nav_angles is not None:
         # Check for Rover.mode status
         if Rover.mode == 'forward': 
+            elapsed_time = Rover.total_time - Rover.start_time
             # Check the extent of navigable terrain
             if len(Rover.nav_angles) >= Rover.stop_forward:  
                 # If mode is forward, navigable terrain looks good 
@@ -24,8 +26,53 @@ def decision_step(Rover):
                 else: # Else coast
                     Rover.throttle = 0
                 Rover.brake = 0
-                # Set steering to average angle clipped to the range +/- 15
-                Rover.steer = np.clip(np.mean(Rover.nav_angles * 180/np.pi), -15, 15)
+                if ((Rover.steer == -15 or Rover.steer == 15)):
+                    if(Rover.event_time == None):
+                        Rover.event_time = Rover.total_time
+                        Rover.circle = True
+                    else:
+                        Rover.circle = True
+                    
+                elif ((Rover.steer != 0 and Rover.throttle) > 0) and Rover.vel == 0:
+                    if(Rover.rock_stuck_time == None):
+                        Rover.rock_stuck_time = Rover.total_time
+                        Rover.stuck = True
+                    else:
+                        Rover.stuck = True
+                #if (Rover.circle == False and Rover.stuck == False):
+                    # Set steering to average angle clipped to the range +/- 15
+                
+                if (Rover.circle == True):
+                    print('Circle Time:', Rover.total_time - Rover.event_time)
+                    if ((Rover.total_time - Rover.event_time) > 10):
+                        if ((Rover.total_time - Rover.event_time) < 15):                           
+                            Rover.steer = random.randint(-15, 15)
+                        else:
+                            Rover.event_time = None
+                            Rover.circle = False
+                            Rover.steer = np.clip(np.mean(Rover.nav_angles * 180/np.pi), -15, 15)
+                    else:
+                        Rover.circle = False
+                        Rover.steer = np.clip(np.mean(Rover.nav_angles * 180/np.pi), -15, 15)
+                elif (Rover.stuck == True):
+                    print('Stuck Time:', Rover.total_time - Rover.rock_stuck_time)
+                    if ((Rover.total_time - Rover.rock_stuck_time) > 10):
+                        if ((Rover.total_time - Rover.rock_stuck_time) < 15):
+                            Rover.steer = -np.clip(np.mean(Rover.nav_angles * 180/np.pi), -15, 15)
+                            Rover.throttle = -1*Rover.throttle_set
+                        else:
+                            Rover.rock_stuck_time = None
+                            Rover.stuck = False
+                            Rover.steer = np.clip(np.mean(Rover.nav_angles * 180/np.pi), -15, 15)
+                    else:
+                        Rover.stuck = False
+                        Rover.steer = np.clip(np.mean(Rover.nav_angles * 180/np.pi), -15, 15)
+                else:
+                    Rover.event_time = None
+                    Rover.rock_stuck_time = None                    
+                    Rover.steer = np.clip(np.mean(Rover.nav_angles * 180/np.pi), -15, 15)
+                    
+                
             # If there's a lack of navigable terrain pixels then go to 'stop' mode
             elif len(Rover.nav_angles) < Rover.stop_forward:
                     # Set mode to "stop" and hit the brakes!

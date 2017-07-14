@@ -40,6 +40,10 @@ class RoverState():
     def __init__(self):
         self.start_time = None # To record the start time of navigation
         self.total_time = None # To record total duration of naviagation
+        self.event_time = None # Holds the timing of certain events
+        self.rock_stuck_time = None # Timer for being stuck on a rock
+        self.stuck = False
+        self.circle = False
         self.img = None # Current camera image
         self.pos = None # Current position (x, y)
         self.yaw = None # Current yaw angle
